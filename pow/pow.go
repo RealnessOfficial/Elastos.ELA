@@ -272,6 +272,7 @@ func (pow *PowService) SolveBlock(MsgBlock *Block) bool {
 	for i := uint32(0); i <= maxNonce; i++ {
 		select {
 		case <-ticker.C:
+			log.Info("five second countdown ends. Re-generate block.")
 			return false
 		case hash := <-BlockPersistCompletedSignal:
 			log.Info("new block received, hash:", hash, " ledger has been changed. Re-generate block.")
@@ -369,8 +370,10 @@ func (pow *PowService) cpuMining() {
 
 out:
 	for {
+		log.Info("000")
 		select {
 		case <-pow.quit:
+			log.Info("pow quit")
 			break out
 		default:
 			// Non-blocking select to fall through
@@ -395,13 +398,20 @@ out:
 					continue
 				}
 				//TODO if co-mining condition
+				log.Info("111")
 				if isOrphan || !inMainChain {
 					continue
 				}
-				pow.BroadcastBlock(msgBlock)
+				log.Info("222")
+				err = pow.BroadcastBlock(msgBlock)
+				if err != nil {
+					log.Error("BroadcastBlock error:", err)
+				}
+				log.Info("333")
 			}
+			log.Info("444")
 		}
-
+		log.Info("555")
 	}
 
 	pow.wg.Done()
